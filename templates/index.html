@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AI MEETING</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/fontawesome.min.css">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section id="setupView" class="setup-view">
+      <div class="setup-inner">
+        <div class="brand-chip">AI MEETING LAB</div>
+        <h1>오늘도 회의는 <span>짧게.</span></h1>
+        <p class="intro">말 많은 AI들 사이에서 결론이 살아남는지 지켜보세요.</p>
+
+        <div class="setup-card">
+          <label class="field-label" for="topic">오늘의 회의 주제</label>
+          <textarea id="topic" rows="3" maxlength="500" placeholder="예: 대표가 홈페이지 첫 화면에 자기 사진을 크게 넣고 싶어 한다..."></textarea>
+
+          <div class="section-head">
+            <span>참석자</span>
+            <small id="participantCount">0명 선택</small>
+          </div>
+          <div id="participantGrid" class="participant-grid"></div>
+          <label class="join-human"><input type="checkbox" id="joinHuman"> 🙋 나도 참여하기</label>
+          <div id="secretaryHint" class="secretary-hint">서기: 최소 두 명은 불러주세요.</div>
+
+          <div class="section-head">
+            <span>회의 시간</span>
+          </div>
+          <div class="duration-grid">
+            <button type="button" class="duration" data-duration="1" aria-pressed="false">
+              <strong>1분</strong><span>⚡ 초스피드</span>
+            </button>
+            <button type="button" class="duration selected" data-duration="3" aria-pressed="true">
+              <strong>3분</strong><span>☕ 적당히</span>
+            </button>
+            <button type="button" class="duration" data-duration="5" aria-pressed="false">
+              <strong>5분</strong><span>🔥 제대로</span>
+            </button>
+          </div>
+
+          <button type="button" id="startButton" class="start-button" disabled>회의 시작</button>
+          <p id="formError" class="form-error" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="meetingView" class="meeting-view hidden">
+      <header class="meeting-header">
+        <div class="agenda-block">
+          <div class="tiny-label">TODAY'S AGENDA</div>
+          <h2 id="agendaTitle"></h2>
+        </div>
+        <div class="timer-wrap">
+          <button type="button" id="pauseMeeting" class="pause-button" aria-label="일시정지" title="일시정지" aria-pressed="false"><i class="fa-solid fa-pause" aria-hidden="true"></i></button>
+          <div id="timer" class="timer">03:00.000</div>
+        </div>
+      </header>
+
+      <div id="roomStage" class="room-stage">
+        <img class="room-background-asset" src="/static/assets/room/room_background_v2.png" alt="" aria-hidden="true">
+        <div class="wall-poster" aria-hidden="true">
+          <span>회의는</span><strong>짧게!!</strong>
+        </div>
+
+        <!-- Layer order: background → characters → table → labels → speech/secretary -->
+        <div id="seatWrapper" class="seat-wrapper">
+          <div id="seats" class="seats"></div>
+        </div>
+
+        <div id="table" class="conference-table">
+          <div class="table-center">
+            <span>AI MEETING</span>
+            <div class="table-wait-indicator" aria-hidden="true"><span class="table-spinner"></span></div>
+            <small id="turnLabel">회의 준비 중...</small>
+          </div>
+        </div>
+
+        <div id="roleLabels" class="role-labels" aria-hidden="true"></div>
+
+        <div id="activeSpeechBubble" class="active-speech-bubble hidden" role="status" aria-live="polite">
+          <div id="bubbleSpeaker" class="bubble-speaker"></div>
+          <div id="bubbleText" class="bubble-text"></div>
+        </div>
+
+        <aside id="secretaryDesk" class="secretary-desk">
+          <div class="secretary-topline">
+            <div class="secretary-face">◉_◉</div>
+            <div class="secretary-copy">
+              <strong>서기</strong>
+              <span id="secretaryText">회의록 준비 중...</span>
+            </div>
+          </div>
+          <div id="typingHands" class="typing-hands" aria-label="서기 기록 중">
+            <i class="fa-solid fa-keyboard" aria-hidden="true"></i>
+            <span>기록 중</span>
+          </div>
+          <button type="button" id="minutesButton" class="secretary-minutes-button">
+            회의록 보기 <span id="minutesCount">0</span>
+          </button>
+        </aside>
+
+        <div id="endOverlay" class="end-overlay hidden" aria-live="polite">
+          <div class="end-card">
+            <div class="end-status">
+              <i id="endIcon" class="end-icon fa-solid fa-circle-check" aria-hidden="true"></i>
+              <div id="endKicker" class="end-kicker">회의 종료</div>
+            </div>
+            <h3 id="endTitle">결론이 정리되었습니다.</h3>
+            <div id="endTimeSaved" class="end-time-saved"></div>
+            <div id="endDecision" class="end-decision"></div>
+            <div class="end-actions">
+              <button type="button" id="endMinutesButton" class="secondary-button">회의록 보기</button>
+              <button type="button" id="endNewMeetingButton" class="primary-small-button">새 회의 시작</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form id="humanComposer" class="human-composer hidden">
+        <label for="humanText">회의에 끼어들기</label>
+        <div class="human-input-row"><input id="humanText" maxlength="1000" autocomplete="off" placeholder="내 의견이나 새로운 정보를 말해 보세요."><button id="humanSend" type="submit" class="primary-small-button">발언</button></div>
+        <span id="humanFeedback" role="status" aria-live="polite"></span>
+      </form>
+      <footer class="meeting-footer">
+        <div id="meetingStatus" class="meeting-status">회의 진행 중</div>
+        <button type="button" id="newMeetingButton" class="ghost-button">새 회의</button>
+      </footer>
+    </section>
+  </main>
+
+  <div id="minutesBackdrop" class="backdrop hidden"></div>
+  <aside id="minutesPanel" class="minutes-panel" aria-hidden="true">
+    <div class="minutes-head">
+      <div><small>SECRETARY LOG</small><h3>회의록</h3></div>
+      <button type="button" id="closeMinutes" class="icon-button" aria-label="닫기">×</button>
+    </div>
+    <div class="minutes-scroll-content">
+      <div id="meetingRecordMeta" class="meeting-record-meta"></div>
+      <div id="finalSummary" class="final-summary"></div>
+      <h4 id="minutesSectionTitle" class="minutes-section-title">회의록</h4>
+      <div id="minutesList" class="minutes-list"></div>
+    </div>
+    <div class="minutes-actions">
+      <button type="button" id="copyMinutes" class="secondary-button">전체 복사</button>
+    </div>
+  </aside>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

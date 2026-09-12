@@ -1,0 +1,1986 @@
+/* ==========================================================================
+   AI MEETING — CLEAN BASELINE
+   - Historical version patch declarations removed.
+   - Core meeting-room selectors consolidated per responsive context.
+   - Existing cascade order retained for non-core selectors.
+   - Use this file as the UI baseline for future asset-only work.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Ownglyph Jaegunsa";
+  src: local("온글잎 재건사"), local("Ownglyph Jaegunsa"),
+       url("/static/fonts/OwnglyphJaegunsa.woff") format("woff"),
+       url("/static/fonts/OwnglyphJaegunsa.ttf") format("truetype");
+  font-display: swap;
+}
+
+:root {
+  --ink: #23231f;
+  --paper: #f8f4e9;
+  --panel: #fff;
+  --muted: #6d685f;
+  --wall: #e4dfd3;
+  --floor: #aa9a84;
+  --table: #78624f;
+  --table-rim: #a88769;
+  --accent: #caff30;
+  --danger: #b93024;
+  --line: #23231f;
+  --soft-line: #c6c0b4;
+  --shadow-sm: 3px 3px 0 var(--line);
+  --shadow-md: 5px 5px 0 var(--line);
+  --shadow-lg: 7px 7px 0 var(--line);
+  --font: "Noto Sans KR", sans-serif;
+  --header-h: clamp(72px, 9vh, 92px);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font);
+  color: var(--ink);
+  background: #d5d0c4;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button, textarea, input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.app-shell {
+  min-height: 100dvh;
+}
+
+/* ---------- Setup ---------- */
+
+.setup-view {
+  min-height: 100dvh;
+  padding: clamp(28px, 5vh, 56px) 20px 64px;
+  background: #d5d0c4;
+}
+
+.setup-inner {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+}
+
+.brand-chip {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 2px solid var(--line);
+  background: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  transform: rotate(-1deg);
+}
+
+.setup-view h1 {
+  margin: 20px 0 8px;
+  font-size: clamp(44px, 5.6vw, 68px);
+  line-height: 1;
+  letter-spacing: -.055em;
+  white-space: nowrap;
+}
+
+.setup-view h1 span {
+  text-decoration: underline 7px var(--accent);
+  text-underline-offset: 6px;
+}
+
+.intro {
+  margin: 0 0 var(--space-5);
+  color: #57534b;
+  font-size: 17px;
+}
+
+.setup-card {
+  padding: clamp(20px, 3vw, 30px);
+  border: 3px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--shadow-md);
+}
+
+.field-label, .section-head {
+  font-weight: 900;
+}
+
+textarea {
+  width: 100%;
+  min-height: 104px;
+  margin-top: var(--space-2);
+  padding: 15px 16px;
+  resize: vertical;
+  border: 2px solid var(--line);
+  outline: 0;
+  background: var(--panel);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+textarea:focus-visible, button:focus-visible, .participant-card:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.section-head small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.participant-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.participant-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 76px;
+  padding: 11px 12px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+}
+
+.participant-card:hover {
+  transform: translateY(-2px);
+}
+
+.participant-card.selected {
+  background: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.participant-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.mini-face {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 2px solid var(--line);
+  border-radius: 44% 56% 46% 54%;
+  background: #f5d9bd;
+  font-size: 22px;
+}
+
+.participant-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.participant-tag {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.secretary-hint {
+  min-height: 24px;
+  margin-top: var(--space-3);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.duration-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.duration {
+  padding: 13px 14px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+  text-align: left;
+}
+
+.duration strong {
+  display: block;
+  font-size: 19px;
+}
+
+.duration span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.duration.selected {
+  background: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.start-button {
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: 16px;
+  border: 3px solid var(--line);
+  background: var(--line);
+  color: #fff;
+  font-weight: 900;
+}
+
+.start-button:not(:disabled):hover {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.start-button:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.form-error {
+  min-height: 22px;
+  margin: var(--space-2) 0 0;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- Meeting shell ---------- */
+
+.meeting-view {
+  height: 100dvh;
+  min-height: 540px;
+  display: grid;
+  grid-template-rows: var(--header-h) minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  padding: 12px clamp(12px, 2vw, 28px);
+  overflow: hidden;
+  background: #cbc5b8;
+}
+
+.meeting-header {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: 0 20px;
+  border: 3px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--shadow-md);
+}
+
+.agenda-block {
+  min-width: 0;
+  flex: 1;
+}
+
+.tiny-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+
+.meeting-header h2 {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-size: clamp(16px, 1.6vw, 21px);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timer-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.timer {
+  min-width: 152px;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.timer.danger {
+  color: var(--danger);
+  animation: blink .55s steps(2, end) infinite;
+}
+
+@keyframes blink { 50% { opacity: .35; } }
+
+.wall-poster::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid #422616;
+  background: linear-gradient(135deg, rgba(255,255,255,.22), transparent 24%),
+    repeating-linear-gradient(8deg, rgba(255,255,255,.045) 0 2px, rgba(50,24,10,.06) 2px 4px);
+}
+
+.wall-poster span, .wall-poster strong {
+  position: relative;
+  z-index: 1;
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  font-weight: 400;
+  letter-spacing: .02em;
+}
+
+.wall-poster span {
+  font-size: clamp(14px, 1.15vw, 17px);
+}
+
+.wall-poster strong {
+  font-size: clamp(22px, 1.9vw, 29px);
+}
+
+.table-center span {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.table-wait-indicator {
+  display: none;
+  justify-content: center;
+  margin: 8px 0 3px;
+}
+
+.conference-table.waiting .table-wait-indicator {
+  display: flex;
+}
+
+.table-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(247, 242, 232, .28);
+  border-top-color: #f7f2e8;
+  border-radius: 50%;
+  animation: table-spin .75s linear infinite;
+}
+
+@keyframes table-spin { to { transform: rotate(360deg); } }
+
+.avatar::before, .avatar::after {
+  content: "";
+  position: absolute;
+  top: 31%;
+  width: 10px;
+  height: 13px;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.avatar::before {
+  left: 24%;
+}
+
+.avatar::after {
+  right: 24%;
+}
+
+.mouth {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  width: 29px;
+  height: 10px;
+  transform: translateX(-50%);
+  border: 3px solid var(--line);
+  border-radius: 2px 2px 12px 12px;
+  background: #fff;
+}
+
+.seat.active .avatar {
+  background: var(--accent);
+  animation: talk .45s ease-in-out infinite alternate;
+}
+
+.seat.skip .avatar {
+  transform: rotate(-7deg) translateY(4px);
+  filter: grayscale(.4);
+}
+
+@keyframes talk {
+  from { transform: translateY(-4px) scale(1.04) rotate(1deg); }
+  to { transform: translateY(-7px) scale(1.08) rotate(-2deg); }
+}
+
+/* ---------- Speech bubble ---------- */
+
+.bubble-speaker {
+  margin-bottom: 5px;
+  color: #5d584f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.bubble-text {
+  min-width: 0;
+}
+
+.active-speech-bubble[data-direction="right"]::after {
+  left: -11px;
+  top: var(--tail-y, 50%);
+  transform: translateY(-50%) rotate(45deg);
+  border-left: 3px solid var(--line);
+  border-bottom: 3px solid var(--line);
+}
+
+.active-speech-bubble[data-direction="left"]::after {
+  right: -11px;
+  top: var(--tail-y, 50%);
+  transform: translateY(-50%) rotate(45deg);
+  border-right: 3px solid var(--line);
+  border-top: 3px solid var(--line);
+}
+
+.active-speech-bubble[data-direction="bottom"]::after {
+  left: var(--tail-x, 50%);
+  top: -11px;
+  transform: translateX(-50%) rotate(45deg);
+  border-left: 3px solid var(--line);
+  border-top: 3px solid var(--line);
+}
+
+/* ---------- Secretary ---------- */
+
+.secretary-topline {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.secretary-face {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 2px solid var(--line);
+  background: #e7e4db;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.secretary-copy strong, .secretary-copy span {
+  display: block;
+}
+
+.secretary-copy strong {
+  font-size: 13px;
+}
+
+.secretary-copy span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.typing-hands {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 24px;
+  color: #5f5a52;
+  font-size: 12px;
+  font-weight: 800;
+  animation: typehands .18s steps(2, end) infinite;
+}
+
+.typing-hands i {
+  font-size: 14px;
+}
+
+.secretary-minutes-button {
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.secretary-minutes-button:hover {
+  background: var(--accent);
+}
+
+.secretary-desk.stopped .typing-hands {
+  animation: none;
+  opacity: .55;
+}
+
+.secretary-desk.waiting .typing-hands {
+  animation-duration: .55s;
+  opacity: .7;
+}
+
+@keyframes typehands { 50% { transform: translateX(3px); } }
+
+/* ---------- End overlay ---------- */
+
+.end-overlay {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(34, 33, 29, .24);
+  backdrop-filter: blur(1px);
+}
+
+.end-card {
+  width: min(540px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  padding: clamp(20px, 3vw, 28px);
+  border: 4px solid var(--line);
+  background: var(--paper);
+  box-shadow: 8px 8px 0 var(--line);
+  text-align: center;
+}
+
+.end-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  margin-bottom: var(--space-3);
+}
+
+.end-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin: 0;
+  color: #4b8b1a;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.end-icon[data-status="deferred"] {
+  color: #8b6a1a;
+}
+
+.end-icon[data-status="unresolved"] {
+  color: var(--danger);
+}
+
+.end-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 2px solid var(--line);
+  background: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.end-card h3 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.25;
+}
+
+.end-time-saved {
+  margin-top: var(--space-2);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.end-decision {
+  margin: var(--space-5) 0;
+  padding: var(--space-4);
+  border: 2px solid var(--line);
+  background: #fff;
+  text-align: left;
+}
+
+.summary-section + .summary-section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--soft-line);
+}
+
+.summary-section h4 {
+  margin: 0 0 var(--space-2);
+  font-size: 14px;
+}
+
+.summary-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.summary-section li + li {
+  margin-top: 6px;
+}
+
+.empty-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.end-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* ---------- Shared buttons ---------- */
+
+.primary-small-button, .secondary-button, .ghost-button, .icon-button {
+  border: 2px solid var(--line);
+  font-weight: 900;
+}
+
+.primary-small-button {
+  padding: 11px 12px;
+  background: var(--line);
+  color: #fff;
+}
+
+.secondary-button {
+  padding: 10px 14px;
+  background: #fff;
+}
+
+.primary-small-button:hover, .secondary-button:hover, .ghost-button:hover, .icon-button:hover {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+/* ---------- Meeting footer ---------- */
+
+.meeting-footer {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.meeting-status {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.meeting-status.waiting::after {
+  content: " · AI 응답 대기";
+}
+
+.ghost-button {
+  padding: 7px 10px;
+  background: transparent;
+  font-size: 12px;
+}
+
+/* ---------- Minutes ---------- */
+
+.backdrop {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  background: rgba(0, 0, 0, .35);
+}
+
+.minutes-panel {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  right: 0;
+  width: min(460px, 92vw);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  border-left: 3px solid var(--line);
+  background: var(--paper);
+  transform: translateX(102%);
+  transition: transform .2s ease;
+}
+
+.minutes-panel.open {
+  transform: translateX(0);
+}
+
+.minutes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 18px 20px;
+  border-bottom: 3px solid var(--line);
+}
+
+.minutes-head small {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.minutes-head h3 {
+  margin: 2px 0 0;
+  font-size: 27px;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: #fff;
+  font-size: 24px;
+}
+
+.minutes-scroll-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 12px 14px 16px;
+}
+
+.meeting-record-meta {
+  margin: 0;
+  border: 2px solid var(--line);
+  background: #fff;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.meeting-record-grid {
+  margin: 0;
+}
+
+.meeting-record-grid > div {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--soft-line);
+}
+
+.meeting-record-grid > div:last-child {
+  border-bottom: 0;
+}
+
+.meeting-record-grid dt {
+  font-weight: 800;
+}
+
+.meeting-record-grid dd {
+  margin: 0;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.meeting-record-grid > .meeting-time-row {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.meeting-time-row dd {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.actual-time-inline {
+  white-space: nowrap;
+}
+
+.record-section-title, .minutes-section-title {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.record-section-title {
+  margin: 0 0 10px;
+}
+
+.minutes-section-title {
+  margin: 16px 0 0;
+  padding: 0 0 8px;
+  border-bottom: 2px solid var(--line);
+}
+
+.record-status {
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+
+.final-summary {
+  max-height: none;
+  overflow: visible;
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 2px solid var(--line);
+  background: #efffc2;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.final-summary > h4 {
+  margin: 0 0 var(--space-4);
+  font-size: 14px;
+}
+
+.minutes-list {
+  min-height: 0;
+  overflow: visible;
+  padding: 10px 0 0;
+}
+
+.minute-item {
+  margin-bottom: var(--space-3);
+  padding: 10px 12px;
+  border: 1px solid var(--soft-line);
+  background: #fff;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.minute-item strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.minute-item.secretary {
+  background: #ece9e1;
+}
+
+.minutes-actions {
+  flex: 0 0 auto;
+  padding: 14px;
+  border-top: 3px solid var(--line);
+  background: var(--paper);
+}
+
+.minutes-actions .secondary-button {
+  width: 100%;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1100px) {
+  .participant-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .conference-table {
+    width: clamp(300px, 40vw, 450px);
+    height: clamp(130px, 22vh, 205px);
+  }
+
+  .secretary-desk {
+    width: 220px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 768px) {
+  :root {
+    --header-h: 68px;
+  }
+
+  .meeting-view {
+    gap: 9px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .wall-poster {
+    top: 9px;
+    width: 106px;
+    min-height: 62px;
+    padding: 5px;
+    border-width: 3px;
+  }
+
+  .wall-poster span {
+    font-size: 12px;
+  }
+
+  .wall-poster strong {
+    font-size: 17px;
+  }
+
+  .conference-table {
+    top: 51%;
+    width: clamp(290px, 34vw, 430px);
+    height: clamp(120px, 21vh, 170px);
+  }
+
+  .avatar {
+    width: 52px;
+    height: 48px;
+  }
+
+  .secretary-desk {
+    right: 10px;
+    bottom: 10px;
+    width: 202px;
+    padding: 8px;
+  }
+
+  .secretary-topline {
+    grid-template-columns: 42px 1fr;
+  }
+
+  .secretary-face {
+    width: 42px;
+    height: 42px;
+  }
+
+  .typing-hands {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    overflow: hidden;
+  }
+
+  .setup-view {
+    height: 100dvh;
+    overflow: auto;
+    padding: 24px 14px 48px;
+  }
+
+  .setup-view h1 {
+    font-size: clamp(28px, 8vw, 38px);
+  }
+
+  .intro {
+    font-size: 15px;
+  }
+
+  .setup-card {
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .participant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .participant-card {
+    min-height: 66px;
+    padding: 8px;
+  }
+
+  .participant-tag {
+    display: none;
+  }
+
+  .mini-face {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .duration-grid {
+    gap: 8px;
+  }
+
+  .duration {
+    padding: 10px;
+  }
+
+  .duration strong {
+    font-size: 17px;
+  }
+
+  :root {
+    --header-h: 64px;
+  }
+
+  .meeting-view {
+    min-height: 0;
+    gap: 7px;
+    padding: 7px;
+  }
+
+  .meeting-header {
+    gap: 8px;
+    padding: 0 9px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tiny-label {
+    display: none;
+  }
+
+  .meeting-header h2 {
+    margin: 0;
+    font-size: 13px;
+  }
+
+  .timer {
+    min-width: 104px;
+    font-size: 19px;
+  }
+
+  .room-stage::before {
+    top: 78%;
+  }
+
+  .avatar::before, .avatar::after {
+    width: 8px;
+    height: 10px;
+    border-width: 2px;
+  }
+
+  .mouth {
+    width: 24px;
+    height: 8px;
+    border-width: 2px;
+  }
+
+  .secretary-topline {
+    min-width: 0;
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .secretary-face {
+    width: 40px;
+    height: 40px;
+  }
+
+  .secretary-copy span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .typing-hands {
+    display: none;
+  }
+
+  .secretary-minutes-button {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .end-card {
+    width: 100%;
+    max-height: 80%;
+    padding: 16px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .end-card h3 {
+    font-size: 24px;
+  }
+
+  .end-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .minutes-panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: min(74dvh, 640px);
+    border-top: 3px solid var(--line);
+    border-left: 0;
+    border-radius: 14px 14px 0 0;
+    transform: translateY(103%);
+  }
+
+  .minutes-panel.open {
+    transform: translateY(0);
+  }
+
+  .minutes-head {
+    padding: 14px 16px;
+  }
+
+  .minutes-head h3 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .participant-card {
+    gap: 7px;
+  }
+
+  .participant-name {
+    font-size: 12px;
+  }
+
+  .mini-face {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    font-size: 19px;
+  }
+
+  .duration span {
+    font-size: 12px;
+  }
+}
+
+@media (max-height: 620px) and (min-width: 768px) {
+  .wall-poster {
+    display: none;
+  }
+
+  .conference-table {
+    top: 49%;
+    height: 116px;
+  }
+
+  .secretary-desk {
+    transform: scale(.9);
+    transform-origin: right bottom;
+  }
+}
+
+.avatar.avatar-asset::before, .avatar.avatar-asset::after {
+  display: none;
+}
+
+.seat.active .avatar.avatar-asset {
+  background: transparent;
+}
+
+.seat.active .avatar.avatar-asset img {
+  animation: marketing-talk .45s ease-in-out infinite alternate;
+}
+
+.seat.skip .avatar.avatar-asset img {
+  filter: grayscale(.25) drop-shadow(0 5px 3px rgba(38,31,25,.10));
+}
+
+@keyframes marketing-talk {
+  from { transform: translateY(-3px) rotate(.6deg); }
+  to { transform: translateY(-7px) rotate(-.6deg) scale(1.025); }
+}
+
+.avatar.avatar-asset img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 4px 2px rgba(33,27,23,.12));
+}
+
+/* make the single art character feel planted into the same tabletop line */
+
+.seat:has(.marketing-avatar)::before {
+  top: 43px;
+  height: 98px;
+}
+
+@media (max-width: 1100px) {
+  .seat {
+
+  }
+
+  .avatar {
+    width: 76px;
+    height: 72px;
+  }
+
+  .avatar.avatar-asset {
+    width: 118px;
+    height: 108px;
+  }
+
+  .role-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 767px) {
+  .seat::before {
+    top: 26px;
+    height: 82px;
+  }
+}
+
+.room-stage::before {
+  left: 0;
+  right: 0;
+  top: 72%;
+  border-top: 3px solid var(--line);
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(142,166,177,.18) 0 1px, transparent 1px) 7% 0 / 1px 100% no-repeat,
+    linear-gradient(90deg, rgba(142,166,177,.18) 0 1px, transparent 1px) 93% 0 / 1px 100% no-repeat,
+    radial-gradient(ellipse at center 65%, rgba(98,74,51,.07), transparent 52%);
+  display: none !important;
+}
+
+/* Poster stays live HTML so copy/font can change independently. */
+
+/* Table is now a separate image asset and spans the entire stage width. */
+
+.conference-table::after {
+  content: "";
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: -1px;
+  height: 48%;
+  border-radius: 0 0 24px 24px;
+  background: linear-gradient(180deg, rgba(143,93,55,.16), rgba(100,63,38,.22));
+  pointer-events: none;
+  display: none !important;
+}
+
+.table-center small {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  color: rgba(255,255,255,.78);
+}
+
+/* Characters sit at the single continuous table edge. */
+
+.seat:has(.marketing-avatar) {
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Bubble remains attached to speaker; it may overlap other room elements. */
+
+/* Mobile is a different composition, not a shrunk 7-person desktop row. */
+
+.room-stage {
+  position: relative;
+  min-height: 0;
+  border: 3px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  background: #efe8dc !important;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.room-stage::before, .room-stage::after {
+  display: none !important;
+}
+
+/* live poster stays over the raster wall */
+
+/* table: no SVG/PNG. one continuous top edge + brown fill */
+
+.table-art-asset {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  display: none !important;
+}
+
+/* people are above the table fill; lower body visually enters the tabletop */
+
+.seat::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 31px;
+  width: 76%;
+  height: 105px;
+  transform: translateX(-50%);
+  border: 3px solid #302b26;
+  border-radius: 28px 28px 12px 12px;
+  background: linear-gradient(180deg, #4a4843, #34322f);
+  box-shadow: 0 5px 0 rgba(0,0,0,.12);
+  display: none !important;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  border: 2px solid var(--line);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.35;
+  padding: 4px 8px;
+  position: relative !important;
+  z-index: 8 !important;
+  margin-top: -2px !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 2px 0 rgba(0,0,0,.13) !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) and (min-width: 768px) {
+  .seat {
+
+  }
+
+  .role-badge {
+    font-size: 10px !important;
+    padding: 3px 5px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .room-stage {
+    background: linear-gradient(var(--wall) 0 78%, var(--floor) 78%);
+    box-shadow: var(--shadow-sm);
+    min-height: 650px !important;
+  }
+
+  .room-background-asset {
+    object-position: center center !important;
+  }
+
+  .seat {
+    z-index: 6;
+    min-height: 118px !important;
+  }
+
+  .seat.mobile-focus {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(var(--seat-scale, 1.04)) !important;
+    z-index: 9 !important;
+    filter: none !important;
+  }
+
+  .seat.mobile-peer {
+    opacity: var(--seat-opacity, .8) !important;
+    visibility: visible !important;
+    transform: translate(-50%, -50%) scale(var(--seat-scale, .6)) !important;
+    z-index: 6 !important;
+    filter: saturate(.8) !important;
+  }
+
+
+  .seat.mobile-peer .role-badge {
+    display: none !important;
+  }
+
+  .role-badge {
+    padding: 2px 5px;
+    border-width: 1px;
+    font-size: 10px !important;
+    margin-top: -1px !important;
+  }
+}
+
+.room-background-asset {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0 !important;
+}
+
+.wall-poster {
+  position: absolute;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 13px 14px 12px;
+  border: 7px solid #6b4129;
+  border-radius: 2px;
+  background: #f6f0df;
+  box-shadow: inset 0 0 0 2px #b88357,
+    inset 0 0 0 5px rgba(74, 40, 21, .18),
+    0 2px 0 #3e2416,
+    5px 7px 0 rgba(0, 0, 0, .18),
+    8px 11px 14px rgba(0, 0, 0, .12);
+  color: #18130f;
+  line-height: 1.08;
+  text-align: center;
+  font-family: "Ownglyph Jaegunsa", "Nanum Myeongjo", serif;
+  top: 2.5% !important;
+  left: 50% !important;
+  width: clamp(150px, 14vw, 215px) !important;
+  transform: translateX(-50%) rotate(-1deg) !important;
+  z-index: 2 !important;
+}
+
+/* Character bodies sit BEHIND the table, so the table naturally hides the lower body. */
+
+.seats {
+  position: absolute;
+  inset: 0;
+  z-index: 4 !important;
+  pointer-events: none;
+}
+
+.seat.active {
+  z-index: 9 !important;
+}
+
+/* The table is a single flat foreground plane: top stroke + solid brown fill. */
+
+.conference-table {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  width: 100% !important;
+  transform: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  z-index: 5 !important;
+  height: 28% !important;
+  border-top: 5px solid #684934 !important;
+  background: #b78357 !important;
+  box-shadow: 0 -3px 0 rgba(255,255,255,.18), 0 -8px 18px rgba(69,48,31,.08) !important;
+}
+
+.table-center {
+  text-align: center;
+  pointer-events: none;
+  color: rgba(255,255,255,.93);
+  position: absolute !important;
+  left: 50% !important;
+  top: 48% !important;
+  transform: translate(-50%,-50%) !important;
+  z-index: 1 !important;
+}
+
+/* Labels are their own layer above the tabletop. */
+
+.role-labels {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+
+/* Keep old in-seat badges out of the way if stale markup is ever cached. */
+
+.seats .role-badge {
+  display: none !important;
+}
+
+/* Bubble is ALWAYS above the current speaker. The tail stays visible at every width. */
+
+.active-speech-bubble {
+  position: absolute;
+  width: min(360px, calc(100% - 28px));
+  padding: 12px 14px;
+  border: 3px solid var(--line);
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  z-index: 20 !important;
+  overflow: visible !important;
+  max-width: calc(100% - 20px) !important;
+}
+
+.active-speech-bubble[data-direction="top"]::after {
+  left: var(--tail-x, 50%);
+  bottom: -11px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 3px solid var(--line);
+  border-bottom: 3px solid var(--line);
+  display: block !important;
+  z-index: 1;
+}
+
+.active-speech-bubble[data-direction="mobile"]::after {
+  display: block !important;
+}
+
+.secretary-desk {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: clamp(220px, 20vw, 268px);
+  display: grid;
+  gap: var(--space-2);
+  padding: 10px;
+  border: 3px solid var(--line);
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  z-index: 15 !important;
+}
+
+@media (max-width: 1100px) and (min-width: 768px) {
+  .floating-role-badge {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+}
+
+@media (max-width: 767px) {
+  .role-labels {
+    z-index: 7 !important;
+  }
+
+  .floating-role-badge.mobile-peer {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .active-speech-bubble .bubble-text {
+    max-height: 116px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 2px;
+  }
+}
+
+/* Show the character's face, torso and gestures; only the lower body sits behind the table. */
+
+/* Labels belong to the tabletop, not to the character's chest. */
+
+.floating-role-badge.active {
+  background: #fff5b8;
+  box-shadow: 0 0 0 3px rgba(183,255,46,.28), 0 2px 0 rgba(0,0,0,.13);
+  transform: translate(-50%, 0) !important;
+}
+
+@media (max-width: 1100px) and (min-width: 768px) {
+  .avatar {
+    width: 82px !important;
+    height: 78px !important;
+  }
+
+  .avatar.avatar-asset {
+    width: 126px !important;
+    height: 112px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .avatar {
+    border-width: 2px;
+    box-shadow: 2px 2px 0 var(--line);
+    width: 78px !important;
+    height: 74px !important;
+  }
+
+  .avatar.avatar-asset {
+    width: 126px !important;
+    height: 112px !important;
+  }
+
+  .floating-role-badge.mobile-focus {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translate(-50%, 0) !important;
+  }
+}
+
+/* Secretary owns a real reserved zone on desktop. */
+
+@media (min-width: 768px) {
+  .secretary-desk {
+    right: 14px !important;
+    bottom: 14px !important;
+    width: clamp(220px, 18vw, 255px) !important;
+  }
+}
+
+/* Characters reveal face + torso/gesture; table only clips the lowest portion. */
+
+.seat {
+  position: absolute;
+  overflow: visible;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: left .22s ease, top .22s ease, opacity .18s ease, transform .18s ease;
+  justify-content: flex-end !important;
+  z-index: 4 !important;
+  pointer-events: auto;
+  min-height: 0 !important;
+}
+
+.avatar {
+  position: relative;
+  border: 3px solid var(--line);
+  border-radius: 44% 56% 43% 57%;
+  background: #f2cfad;
+  transition: transform .18s ease, background .18s ease;
+  margin-top: 12px;
+  box-shadow: none;
+  margin: 0 auto !important;
+  width: clamp(88px, 7.1vw, 112px) !important;
+  height: clamp(84px, 6.8vw, 108px) !important;
+  margin-bottom: 0 !important;
+}
+
+.avatar.avatar-asset {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  margin-top: -6px;
+  margin: 0 auto -5px !important;
+  width: clamp(142px, 10.8vw, 178px) !important;
+  height: clamp(126px, 9.6vw, 158px) !important;
+  margin-bottom: 0 !important;
+}
+
+/* Labels are visually embedded on the tabletop instead of sticking upward. */
+
+.floating-role-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  border: 2px solid var(--line);
+  background: #fffdf8;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  transition: left .2s ease, top .2s ease, opacity .18s ease, transform .18s ease;
+  transform: translate(-50%, 0) !important;
+  padding: 3px 7px !important;
+  line-height: 1.2 !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.10) !important;
+}
+
+/* Bubble tail must remain visible even when the bubble is clamped to screen edges. */
+
+.active-speech-bubble::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .floating-role-badge {
+    font-size: 10px;
+    padding: 3px 5px;
+    transform: translate(-50%, 0) !important;
+    top: auto;
+  }
+
+  .secretary-desk {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px;
+    padding: 7px;
+    box-shadow: var(--shadow-sm);
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    bottom: 10px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .seat {
+    transition: left .42s ease, top .22s ease, transform .42s ease, opacity .42s ease;
+  }
+
+  .seat.mobile-focus {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(var(--seat-scale, 1.04)) !important;
+    z-index: 9 !important;
+    filter: none !important;
+  }
+
+  .seat.mobile-peer {
+    opacity: var(--seat-opacity, .8) !important;
+    visibility: visible !important;
+    transform: translate(-50%, -50%) scale(var(--seat-scale, .6)) !important;
+    z-index: 6 !important;
+    filter: saturate(.8) !important;
+  }
+
+
+  .floating-role-badge.mobile-peer {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .floating-role-badge.mobile-focus {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .secretary-desk {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    width: auto !important;
+  }
+}
+
+.seat-wrapper {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: min(1200px, calc(100% - 320px));
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.seat-wrapper .seats {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 901px) and (max-width: 1360px) {
+  .seat-wrapper {
+    width: min(1120px, calc(100% - 285px));
+  }
+}
+
+@media (max-width: 900px) {
+  .seat-wrapper {
+    left: 0;
+    width: 100%;
+    transform: none;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Raise the table top by roughly 100px to use more vertical space. */
+
+  /* Motto frame: ~1.5x taller with proportionally larger type. */
+
+  .wall-poster span {
+    font-size: 21px !important;
+  }
+
+  .wall-poster strong {
+    font-size: 34px !important;
+  }
+}
+
+/* Desktop / tablet: raise the table top 80px so seat labels stay clear of the secretary card. */
+
+@media (min-width: 768px) {
+  .conference-table {
+    height: 260px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .conference-table {
+    border-width: 3px;
+    box-shadow: inset 0 0 0 6px var(--table-rim), 5px 6px 0 rgba(0, 0, 0, .14);
+    top: 72%;
+    width: 94%;
+    z-index: 5 !important;
+    border-top-width: 4px !important;
+    height: calc(19% + 70px) !important;
+  }
+
+  .wall-poster {
+    left: 8px;
+    border-width: 3px;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, .2);
+    top: 2.2% !important;
+    width: 172px !important;
+    padding: 15px 14px 14px !important;
+    min-height: 0 !important;
+    padding-top: 8px !important;
+    padding-bottom: 7px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 900px) {
+  .secretary-desk {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 7px 8px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: 66px !important;
+    overflow: hidden !important;
+  }
+
+  .secretary-topline {
+    min-width: 0 !important;
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+  }
+
+  .secretary-face {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .secretary-copy span {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .typing-hands {
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .secretary-minutes-button {
+    width: auto !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .active-speech-bubble {
+    padding: 9px 10px;
+    border-width: 2px;
+    box-shadow: var(--shadow-sm);
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-y: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    top: var(--bubble-top, 160px) !important;
+    bottom: auto !important;
+    left: 10px !important;
+    right: auto !important;
+    width: calc(100% - 20px) !important;
+    max-width: calc(100% - 20px) !important;
+  }
+}
+
+/* Mobile: raise the table-center content only. */
+@media (max-width: 767px) {
+  .table-center {
+    top: 40% !important;
+  }
+}
+
+/* Playback controls and optional human participant. */
+.timer-wrap { gap: 10px; }
+.pause-button { flex: 0 0 auto; width: 36px; height: 36px; padding: 0; border: 2px solid var(--line); border-radius: 50%; background: var(--paper); color: var(--ink); cursor: pointer; }
+.pause-button:disabled { opacity: .45; cursor: default; }
+.join-human { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-weight: 700; }
+.human-composer { padding: 8px 12px; border: 2px solid var(--line); background: var(--paper); }
+.human-composer label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
+.human-input-row { display: flex; gap: 8px; }
+.human-input-row input { flex: 1; min-width: 0; padding: 8px; border: 1px solid var(--line); font: inherit; }
+#humanFeedback { display: block; font-size: 12px; min-height: 16px; margin-top: 3px; }
+.meeting-view.with-human { height: auto; min-height: 100dvh; overflow: visible; grid-template-rows: auto minmax(520px, 1fr) auto auto; }
+.meeting-view.with-human .room-stage { min-height: 520px !important; }
+.human-avatar:not(.avatar-asset) { display: grid; place-items: center; color: #51456b; background: #dfd6ee; }
+.human-avatar i { font-size: 44px; }
+.avatar.human-avatar::before, .avatar.human-avatar::after { display: none; }
+.seat.active .avatar.human-avatar:not(.avatar-asset) { background: #dfd6ee; }
+.expression-mark {
+  position: absolute;
+  right: -26px;
+  top: 42%;
+  width: 48px;
+  height: 48px;
+  transform: translateY(-50%);
+  z-index: 12;
+  pointer-events: none;
+}
+.expression-mark img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 0 rgba(255,255,255,.95)); }
+.playback-paused *, .playback-paused *::before, .playback-paused *::after { animation-play-state: paused !important; }
+@media (max-width: 900px) {
+  .meeting-header h2 { white-space: normal; text-overflow: clip; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+  .meeting-header { min-height: 66px; padding-top: 8px; padding-bottom: 8px; }
+  .timer-wrap { gap: 7px; }
+  .pause-button { width: 32px; height: 32px; }
+  .seats .seat { position: absolute; display: flex; flex-direction: column; align-items: center; width: var(--carousel-size, 126px); min-height: 0 !important; transform: translate(-50%, -100%) scale(var(--seat-scale, 1)) !important; transform-origin: center bottom; transition: filter .2s ease !important; }
+  .seat .avatar { width: var(--carousel-size, 126px) !important; height: calc(var(--carousel-size, 126px) * .9) !important; margin: 0 !important; }
+  .seat.mobile-peer { opacity: var(--seat-opacity, .58) !important; filter: blur(1px) saturate(.65) !important; visibility: var(--seat-visibility, visible) !important; z-index: 6 !important; }
+  .seat.mobile-focus { opacity: var(--seat-opacity, 1) !important; visibility: var(--seat-visibility, visible) !important; filter: none !important; z-index: 9 !important; }
+  .expression-mark { right: -20px; top: 43%; width: 42px; height: 42px; }
+}
+
+/* Compensate for the human sprite's wider transparent canvas. */
+.avatar.avatar-asset.human-avatar img {
+  position: absolute;
+  width: 110%;
+  height: 110%;
+  left: -5%;
+  bottom: -7%;
+}

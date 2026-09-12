@@ -1,0 +1,66 @@
+import importlib
+import json
+from pathlib import Path
+import sys
+import types
+import unittest
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+sys.modules.setdefault("dotenv", types.SimpleNamespace(load_dotenv=lambda: None))
+sys.modules.setdefault("openai", types.SimpleNamespace(OpenAI=lambda **kwargs: None))
+engine = importlib.import_module("character_meeting_v5")
+meeting = importlib.import_module("meeting")
+
+
+class CompletionScenarios(unittest.TestCase):
+    def gate(self, topic, transcript, state):
+        answer = json.dumps({"state": state, "reason": "fixture", "remaining_question": ""})
+        with patch.object(engine, "ask", return_value=answer) as ask:
+            result = meeting.goal_completion_gate(topic, transcript)
+        return result, ask.call_args.args[0]
+
+    def test_actual_menu_choice_can_be_decided(self):
+        topic = "점심 메뉴를 김치찌개와 돈까스 중 하나로 정하자."
+        turns = [{"speaker": "CEO", "text": "오늘은 돈까스로 갑시다."}]
+        result, prompt = self.gate(topic, turns, "decided")
+        self.assertEqual(result["state"], "decided")
+        self.assertIn("실제 메뉴 하나를 골랐는지", prompt)
+
+    def test_comparison_without_concept_choice_stays_incomplete(self):
+        topic = "신제품 광고 콘셉트를 귀여운 방향과 강렬한 방향 중 어디로 잡을까?"
+        turns = [{"speaker": "디자이너", "text": "귀여움은 친근하고 강렬함은 첫인상이 셉니다."}]
+        result, prompt = self.gate(topic, turns, "incomplete")
+        self.assertEqual(result["state"], "incomplete")
+        self.assertIn("콘셉트 선택 질문", prompt)
+
+    def test_kpi_is_not_budget_allocation(self):
+        topic = "광고비와 프로모션 비용을 어떻게 배분할까?"
+        turns = [{"speaker": "마케팅팀장", "text": "전환율을 보고 다음 달에 조정하죠."}]
+        result, prompt = self.gate(topic, turns, "incomplete")
+        self.assertEqual(result["state"], "incomplete")
+        self.assertIn("KPI나 테스트·집행 방법만", prompt)
+
+    def test_relative_allocation_can_be_decided(self):
+        topic = "광고비와 프로모션 비용을 어떻게 배분할까?"
+        turns = [{"speaker": "CEO", "text": "광고는 최소만 남기고 나머지는 프로모션에 씁시다."}]
+        result, prompt = self.gate(topic, turns, "decided")
+        self.assertEqual(result["state"], "decided")
+        self.assertIn("상대적 배분", prompt)
+
+    def test_character_prompt_keeps_optional_human_oddness(self):
+        lens = {"CEO": engine.CHARACTERS["CEO"]}
+        generated = json.dumps({
+            "mood": "가벼움", "lens": "오늘 입맛", "want": "돈까스",
+            "fr":"없음", "personal_detail":"소스는 반만", "quirk":"양배추부터 먹으면 진 기분",
+            "imp":"돈까스", "interest":70, "strength":60,
+        }, ensure_ascii=False)
+        with patch.object(engine, "CHARACTERS", lens), patch.object(engine, "ask", return_value=generated) as ask:
+            state = engine.create_initial_lenses("점심 뭐 먹을까?")["CEO"]
+        self.assertEqual(state["quirk"], "양배추부터 먹으면 진 기분")
+        self.assertIn("조금 이상한 진심", ask.call_args.args[0])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,40 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local runs and generated reports
+eval_runs/
+*_result.json
+*_result.txt
+*_results.json
+*_results.txt
+PREVIEW_MEETING.txt
+
+# Superseded prototypes and local backups
+character_meeting_prototype.py
+character_meeting_v3.py
+character_meeting_v4.py
+character_card_test.py
+character_card_test_v2.py
+meeting_v0*.py
+README_v5_*.txt
+CSS_CLEANUP_NOTES.txt
+README_UI.txt
+README.txt
+
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
