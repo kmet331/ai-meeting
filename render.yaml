@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-meeting
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AI_MEETING_MODEL
+        value: gpt-5.4-mini
+      - key: PYTHON_VERSION
+        value: 3.13.5
