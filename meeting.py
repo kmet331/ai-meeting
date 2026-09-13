@@ -47,12 +47,13 @@ def interpret_context(topic: str, participants: list[str]) -> dict:
 주제에 없는 PM, 팀장, 담당자, 제3자 같은 새 인물/직책을 만들지 않는다.
 
 reading에는 사용자가 지금 누구에게 무엇을 듣고 싶어 하는지 자유로운 한두 문장으로 적는다.
-각자의 답을 묻는지, 함께 하나를 정하려는지 문장에 근거가 있을 때만 그렇게 쓴다.
-사용자의 말이 참석자에게 지금 말로 바로 수행할 일을 요청하는지도 읽는다. '자기소개 하기',
-'각자 아이디어 말하기', '한마디 해줘'처럼 결과를 이 자리에서 말할 수 있으면 실제 내용을 말하는 것이 요청이다.
-이를 누가 먼저 할지, 몇 초로 할지, 어떤 형식으로 할지 정하는 회의로 바꾸지 않는다. 사용자가 방법을 물었을 때만 방법을 논의한다.
+requested_response에는 참석자들의 실제 발언에 무엇이 들어가야 하는지 구체적인 자유문장으로 적는다.
+shared_result에는 사용자가 여러 의견 뒤에 하나의 공동 결과까지 명시적으로 요구한 경우에만 그 결과를 적고, 아니면 빈 문자열로 둔다.
+participation_scope에는 누구의 답을 명시적으로 요구했는지 적는다. 문장에 없는 전원 참여를 추측하지 않는다.
+nearby_mistake에는 원 요청과 비슷해 보이지만 대신 해서는 안 되는 다른 과업을 적는다. 고정 유형 이름을 붙이지 말고 이 문장 안에서만 구체적으로 구분한다.
+둘 이상의 기대가 함께 있으면 하나를 버리지 말고 requested_response와 shared_result에 함께 보존한다.
 둘 다 가능하면 하나를 추측해 확정하지 말고 uncertainty에 무엇이 모호한지 그대로 남긴다.
-completion에는 이 요청에 실제로 답했다고 볼 수 있는 내용이 무엇인지 적는다. 직접 수행 요청이면 계획이 아니라 실제 수행 결과를 적는다. 답 자체는 만들지 않는다.
+completion에는 실제 대화의 어떤 내용이 나오면 원 요청에 답했다고 볼 수 있는지 적는다. 진행 방법이나 준비 절차가 아니라 사용자가 받을 실제 결과를 기준으로 삼는다. 답 자체는 만들지 않는다.
 이 해석은 이후 사용자의 설명으로 언제든 바뀔 수 있는 가설이다.
 JSON만 출력한다.""",
         f"""회의 주제: {topic}
@@ -62,8 +63,12 @@ JSON 형식:
 {{
   "relations": {{"CEO":"", "운영 담당자":"", "마케팅팀장":"", "소비자 대표":"", "디자이너":"", "개발자":"", "클라이언트":""}},
   "reading": "사용자가 누구에게 무엇을 듣고 싶어 하는지",
+  "requested_response": "참석자 발언에 실제로 들어가야 할 내용이나 행동",
+  "shared_result": "명시적으로 요구된 공동 결과. 없으면 빈 문자열",
+  "participation_scope": "명시적으로 답을 요구받은 사람 범위",
+  "nearby_mistake": "비슷해 보이지만 대신 하면 안 되는 과업",
   "uncertainty": "아직 모호한 점. 없으면 없음",
-  "completion": "어떤 내용이 나오면 원 요청에 답한 것인지"
+  "completion": "어떤 실제 내용이 나오면 원 요청에 답한 것인지"
 }}""",
     )
     data = parse_json(raw, {"relations": {}, "reading": topic, "uncertainty": "해석 실패", "completion": "사용자 말에 직접 답함"})
@@ -75,6 +80,10 @@ JSON 형식:
             if str(relations.get(role, "")).strip()
         },
         "reading": str(data.get("reading", topic)).strip() or topic,
+        "requested_response": str(data.get("requested_response", data.get("completion", "사용자 말에 직접 답함"))).strip(),
+        "shared_result": str(data.get("shared_result", "")).strip(),
+        "participation_scope": str(data.get("participation_scope", "명시된 대상만")).strip(),
+        "nearby_mistake": str(data.get("nearby_mistake", "원 요청 대신 진행 절차만 논의하는 것")).strip(),
         "uncertainty": str(data.get("uncertainty", "없음")).strip() or "없음",
         "completion": str(data.get("completion", "사용자 말에 직접 답함")).strip(),
     }
@@ -91,9 +100,15 @@ def contextual_topic(topic: str, context: dict) -> str:
         reading = str(context.get("reading", topic))
         uncertainty = str(context.get("uncertainty", "없음"))
         completion = str(context.get("completion", "사용자 말에 직접 답함"))
+        requested_response = str(context.get("requested_response", completion))
+        shared_result = str(context.get("shared_result", ""))
+        participation_scope = str(context.get("participation_scope", "명시된 대상만"))
+        nearby_mistake = str(context.get("nearby_mistake", "원 요청 대신 진행 절차만 논의하는 것"))
     else:
         relations = context
         reading, uncertainty, completion = topic, "없음", "사용자 말에 직접 답함"
+        requested_response, shared_result = completion, ""
+        participation_scope, nearby_mistake = "명시된 대상만", "원 요청 대신 진행 절차만 논의하는 것"
     relation_text = "\n".join(f"- {role}: {desc}" for role, desc in relations.items()) or "- 별도 당사자 관계 없음"
     attendees = ", ".join(engine.CHARACTERS.keys())
     return f"""{topic}
@@ -107,14 +122,20 @@ def contextual_topic(topic: str, context: dict) -> str:
 [현재 질문에 대한 임시 해석 — 회의 모드나 확정 명령이 아님]
 {reading}
 모호한 점: {uncertainty}
+사용자가 실제로 받고 싶은 반응: {requested_response}
+명시적으로 필요한 공동 결과: {shared_result or '없음'}
+누구의 답을 요구했는지: {participation_scope}
+대신 하면 안 되는 가까운 다른 과업: {nearby_mistake}
 답이 되려면: {completion}
 
 [대화 시 사실관계 규칙]
 - 자기 자신이 위 상황의 당사자라면 제3자로 부르지 말고 '제가/저희가'처럼 당사자 시점으로 말한다.
 - 주제와 현재 참석자 목록에 없는 사람, 직책, 부서, PM 등을 새 사실처럼 만들어내지 않는다. 참석자를 지칭해야 하면 현재 참석자 역할명을 사용한다.
 - 필요한 정보가 주제에 없으면 있다고 가정하지 말고 질문/조건으로 남긴다.
-- 위 해석은 임시 가설이다. 실제 사용자가 대화 중 뜻을 설명하거나 바로잡으면 가장 최근 설명이 즉시 우선한다.
-- 사용자가 말로 바로 수행할 일을 요청했다면 자기 차례에 그 일을 실제로 한다. 수행 방식·순서·시간을 정하자는 말로 대체하지 않는다.
+- 이 요청 프레임은 참고 장식이 아니라 다음 발언을 고르는 기준이다. 다음 말이 '사용자가 실제로 받고 싶은 반응'에 직접 기여하는지 먼저 본다.
+- 위 해석은 임시 가설이다. 실제 사용자가 대화 중 뜻을 설명하거나 바로잡으면 가장 최근 설명이 즉시 우선한다. 사용자의 단순 취향 발언을 의도 수정으로 오해하지 않는다.
+- 말로 낼 수 있는 결과를 요구받았다면 그 실제 결과를 말한다. 방법을 묻지 않았는데 순서·형식·시간·준비 절차만 논의하며 원 요청을 대체하지 않는다.
+- 여러 의견과 공동 결과가 함께 요구되면 앞부분을 건너뛰고 성급히 결론만 만들거나, 반대로 의견만 늘어놓고 공동 결과를 잊지 않는다.
 - 해석이 모호하면 공동 목표나 합의를 가정하지 말고, 문자 그대로 답하거나 자연스럽게 확인한다."""
 
 
@@ -138,7 +159,7 @@ def goal_completion_gate(topic: str, history: list[dict], request_context: dict 
 - '핵심부터 좁혀보자', '항목을 분류하자', '기준을 정해보자'처럼 다음에 문제를 푸는 절차만 정한 것은 그 문제의 답이 아니다. 실제로 남길 핵심, 포함 범위, 우선순위 또는 갈등을 푸는 구체적 원칙이 채택되어야 decided다.
 - '꼭 필요한 것은 남기고 보기 좋은 것만 뺀다'처럼 누구나 동의할 수 있지만 실제 항목을 가르지 못하는 말은 아직 적용 가능한 원칙이 아니다. 적어도 실제 항목·개수·우선순위·경계 중 하나가 정해지거나, 추가 회의 없이 사례를 가를 수 있을 만큼 기준이 구체적이어야 한다.
 - 반대로 '주말에 뭐 할 거야?'처럼 각자 계획이나 생각을 묻는 열린 대화는 모두가 하나의 답을 채택해야 하는 목표가 아니므로 not_goal이 자연스럽다.
-- '자기소개 하기', '아이디어를 말해줘', '한마디씩 해보자'처럼 참석자가 이 자리에서 말로 수행할 요청도 결정 목표가 아니다. 실제 내용을 말했는지 보며, 순서·형식·시간만 정한 것을 수행 완료나 결정 완료로 만들지 않는다.
+- 사용자가 말로 낼 실제 결과를 요구했으면 그 결과가 대화에 나왔는지 본다. 방법을 요청하지 않았는데 순서·형식·시간·준비 절차만 정한 것은 원 요청의 완료나 결정이 아니다.
 - 메뉴 선택 질문은 실제 메뉴 하나를 골랐는지, 콘셉트 선택 질문은 실제 톤을 골랐는지 본다. 비교나 평가 기준·테스트 방법만 정했다면 핵심 답이 아니다.
 - '광고비와 프로모션 비용을 어떻게 배분할까?'에서 KPI나 테스트·집행 방법만 정한 상태는 decided가 아니다. 광고에 더 많이 쓰고 프로모션은 최소 수준으로 둔다는 배분 방향이나 70/30 같은 배분 자체가 정해져야 한다. 숫자 비율은 필수가 아니다.
 - 광고 안에서 어떤 메시지에 쓸지, 프로모션을 누구에게 줄지만 정한 것을 광고비 대 프로모션비 배분 결정으로 확대 해석하지 않는다.
@@ -164,6 +185,10 @@ JSON만 출력한다.""",
         f"""회의 주제: {topic}
 시작 시 임시 해석: {request_context.get('reading', topic)}
 시작 시 모호한 점: {request_context.get('uncertainty', '없음')}
+사용자가 실제로 받고 싶은 반응: {request_context.get('requested_response', request_context.get('completion', '사용자 말에 직접 답함'))}
+명시적으로 필요한 공동 결과: {request_context.get('shared_result', '') or '없음'}
+요구된 참여 범위: {request_context.get('participation_scope', '명시된 대상만')}
+대신 하면 안 되는 가까운 다른 과업: {request_context.get('nearby_mistake', '') or '없음'}
 처음 예상한 답의 기준: {request_context.get('completion', '사용자 말에 직접 답함')}
 대화:
 {transcript}
@@ -199,6 +224,9 @@ def final_summary(topic: str, history: list[dict], end_reason: str, completion_s
 outcome이 discussed라면 issues에는 실제로 답하지 못한 질문이나 누군가 해결할 필요를 분명히 제기한 문제만 쓴다. 서로 다른 취향이나 관점을 그 자체로 해결해야 할 쟁점처럼 만들지 않는다.""",
         f"""주제:{topic}
 시작 시 임시 해석:{request_context.get('reading', topic)}
+사용자가 실제로 받고 싶은 반응:{request_context.get('requested_response', request_context.get('completion', '사용자 말에 직접 답함'))}
+명시적으로 필요한 공동 결과:{request_context.get('shared_result', '') or '없음'}
+대신 하면 안 되는 가까운 다른 과업:{request_context.get('nearby_mistake', '') or '없음'}
 대화 중 사용자가 뜻을 바로잡았다면 그 최근 설명을 우선한다.
 종료 이유:{end_reason}
 종료 직전 목표완료 판정:{completion_state or '미제공'}

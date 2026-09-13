@@ -168,10 +168,18 @@ Controller는 conversation alive 및 meaningful new issue/question/objection/bra
 - 2026-09-13 반응형 좌석 보정: 900px 이하 캐러셀에서 발화자는 하단 34px, 주변 인물은 10px가 테이블 뒤로 들어가도록 배치한다. 확대된 발화자가 테이블 선 위에 떠 보이던 3px 기준은 폐기했다.
 - 반응 아이콘은 PC 48px, 900px 이하 42px이며 캐릭터 오른쪽 중앙에 둔다. 활성 좌석을 같은 줄의 다른 캐릭터보다 위에 그려 아이콘이 옆 캐릭터에 가려지지 않게 하고, 말풍선은 별도 상단 영역을 유지한다.
 
-## 2026-09-13 direct-task and table alignment update
+## 2026-09-13 request handling and table alignment update
 
-- A prompt that directly asks attendees to perform something in speech (for example, `자기소개 하기`) is fulfilled by performing it. Characters must not replace it with a discussion about order, format, or time unless the user asks for that method.
-- Such direct performance is not a shared decision goal; summaries must not label process rules as the requested result.
+- When the user asks for content that can be produced in the conversation, characters produce that content instead of substituting a discussion about procedure. This is a general request-reading rule, not topic-specific handling.
+- A conversational output is treated as a shared decision only when the user actually requested a shared result; summaries preserve the requested result shape.
 - The table waiting indicator is one horizontal line: spinner followed by status text.
 - Before the first spoken turn the status is `회의 준비 중...`; after at least one spoken turn, while waiting for the next model response, it is `생각 중...`.
 - Character/table alignment is measured from the table top. At widths up to 900px the focused carousel character overlaps the table by 14px and peers by 10px. At 901-1560px every character uses the same 10px row drop; the active speaker gets no extra downward offset.
+
+
+## 2026-09-13 request-frame integration
+
+- 시작 전 해석은 고정 모드나 주제별 규칙이 아니라 자유문장 요청 프레임을 만든다: 실제로 받고 싶은 반응, 명시적으로 필요한 공동 결과, 요구된 참여 범위, 비슷하지만 대신하면 안 되는 과업, 완료 근거.
+- 같은 요청 프레임을 초기 렌즈, controller, natural selector, 캐릭터 발화, completion gate, 최종 요약이 공통 실행 기준으로 사용한다.
+- 특정 `자기소개` 예시와 전용 처리는 제거했다. 처음 보는 요청도 실제로 요구된 결과와 가까운 다른 과업을 구분해 처리한다.
+- 사용자의 후속 발언이 의도를 설명하거나 바로잡을 때만 최신 설명이 초기 가설보다 우선한다. 단순한 취향·의견 발언은 요청 변경으로 오해하지 않는다.

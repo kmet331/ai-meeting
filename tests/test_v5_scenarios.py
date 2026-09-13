@@ -49,20 +49,30 @@ class CompletionScenarios(unittest.TestCase):
         self.assertEqual(result["state"], "decided")
         self.assertIn("상대적 배분", prompt)
 
-    def test_direct_performance_request_is_not_turned_into_process_planning(self):
+    def test_request_frame_drives_unseen_verbal_task_without_a_special_mode(self):
         answer = json.dumps({
             "relations": {},
-            "reading": "참석자들이 실제로 자기소개한다",
+            "reading": "각 참석자가 제품을 날씨에 비유한 실제 표현을 듣고 싶다",
+            "requested_response": "각자 떠올린 날씨 비유와 짧은 이유",
+            "shared_result": "",
+            "participation_scope": "각 참석자",
+            "nearby_mistake": "비유를 만드는 방법이나 발표 순서를 정하는 것",
             "uncertainty": "없음",
-            "completion": "참석자들의 실제 자기소개",
+            "completion": "실제 날씨 비유들이 제시됨",
         }, ensure_ascii=False)
+        topic = "우리 제품을 날씨에 비유해서 한마디씩 해봐"
         with patch.object(engine, "ask", return_value=answer) as ask:
-            context = meeting.interpret_context("자기소개 하기", ["CEO", "디자이너"])
+            context = meeting.interpret_context(topic, ["CEO", "디자이너"])
         prompt = ask.call_args.args[0]
-        self.assertEqual(context["completion"], "참석자들의 실제 자기소개")
-        self.assertIn("실제 내용을 말하는 것이 요청", prompt)
-        contextual = meeting.contextual_topic("자기소개 하기", context)
-        self.assertIn("그 일을 실제로 한다", contextual)
+        self.assertEqual(context["requested_response"], "각자 떠올린 날씨 비유와 짧은 이유")
+        self.assertEqual(context["shared_result"], "")
+        self.assertNotIn("자기소개", prompt)
+        engine_source = (ROOT / "character_meeting_v5.py").read_text(encoding="utf-8")
+        self.assertNotIn("자기소개 하기", engine_source)
+        self.assertGreaterEqual(engine_source.count("사용자가 실제로 받고 싶은 반응"), 3)
+        contextual = meeting.contextual_topic(topic, context)
+        self.assertIn("사용자가 실제로 받고 싶은 반응", contextual)
+        self.assertIn("비유를 만드는 방법이나 발표 순서를 정하는 것", contextual)
 
     def test_character_prompt_keeps_optional_human_oddness(self):
         lens = {"CEO": engine.CHARACTERS["CEO"]}
