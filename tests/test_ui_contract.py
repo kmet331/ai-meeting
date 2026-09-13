@@ -15,6 +15,11 @@ for element_id in (
 
 assert 'class="end-status"' in HTML
 assert 'class="wall-poster"' in HTML
+assert 'class="table-status-line"' in HTML
+assert "(active ? 14 : 10)" in JS
+assert "const tabletDrop = tabletRow ? 10 : 0;" in JS
+assert "state.minutes.some(item => item.type === 'speech')" in JS
+assert "hasPresentedSpeech ? '생각 중...' : '회의 준비 중...'" in JS
 assert "Noto+Sans+KR" in HTML
 assert '--font: "Noto Sans KR", sans-serif' in CSS
 assert "Malgun Gothic" not in CSS

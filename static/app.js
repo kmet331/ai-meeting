@@ -224,7 +224,7 @@ function positionCarousel(nodes, labels, width, tableTop, wrapperLeft, wrapperTo
       // Let the foreground table cover the speaker's lower body. A centered
       // carousel speaker is larger than peers, so the old 3px overlap made
       // that person look perched on the table edge at tablet/phone widths.
-      node.style.top = `${tableTop - wrapperTop + (active ? 34 : 10)}px`;
+      node.style.top = `${tableTop - wrapperTop + (active ? 14 : 10)}px`;
       const label = labels.find(n => n.dataset.role === node.dataset.role);
       if (label) {
         label.classList.toggle('mobile-focus', active);
@@ -301,9 +301,9 @@ function positionSeats() {
       const x = startX + (endX - startX) * t;
       seat.style.left = `${Math.round(x)}px`;
 
-      // Desktop stays exactly where it is.
-      // On 901-1560px tablet/mid widths, lower the row by 10px and the active speaker by 30px.
-      const tabletDrop = tabletRow ? (seat.classList.contains('active') ? 30 : 10) : 0;
+      // Keep every body on the same tabletop line. Mid-width screens use one small
+      // shared drop; the active speaker must not sink farther than the other attendees.
+      const tabletDrop = tabletRow ? 10 : 0;
       seat.style.top = `${Math.round(tableTop - 68 + tabletDrop)}px`;
       setLabel(seat, x);
     });
@@ -550,6 +550,7 @@ function pumpPresentationQueue() {
     setSpeaker(item.data.speaker, item.data.speech, item.data.expression);
     addMinute('speech', item.data.speaker, item.data.speech);
     ui.turnLabel.textContent = '회의 중';
+    ui.meetingStatus.textContent = '회의 중';
     hold = speechHoldMs(item.data.speech);
   } else if (item.type === 'secretary') {
     ui.secretaryText.textContent = item.data.text;
@@ -628,8 +629,8 @@ function togglePause() {
   } else {
     if (state.holdCallback) schedulePresentation(state.holdCallback, state.holdRemaining);
     setPlaybackClock(state.queueBusy && Boolean(state.activeSpeaker));
-    ui.meetingStatus.textContent = '회의 중';
-    ui.turnLabel.textContent = state.activeSpeaker ? '회의 중' : '회의 준비 중...';
+    ui.meetingStatus.textContent = state.activeSpeaker ? '회의 중' : '생각 중...';
+    ui.turnLabel.textContent = state.activeSpeaker ? '회의 중' : '생각 중...';
     if (!state.queueBusy) pumpPresentationQueue();
   }
 }
@@ -718,8 +719,16 @@ function setPlaybackClock(running) {
   ui.meetingStatus.classList.toggle('waiting', waiting);
   ui.secretaryDesk.classList.toggle('waiting', waiting);
   ui.table.classList.toggle('waiting', waiting);
-  // API 응답을 기다리는 동안에는 spinner와 함께 준비 상태를 보여준다.
-  if (waiting) ui.turnLabel.textContent = '회의 준비 중...';
+  // Before a meeting the table says it is preparing. Once started, waiting for
+  // the next model response is thinking time, shown on the same line as the spinner.
+  if (waiting) {
+    const hasPresentedSpeech = state.minutes.some(item => item.type === 'speech');
+    const waitingText = hasPresentedSpeech ? '생각 중...' : '회의 준비 중...';
+    ui.turnLabel.textContent = waitingText;
+    ui.meetingStatus.textContent = waitingText;
+  } else if (state.timerRunning) {
+    ui.meetingStatus.textContent = '회의 중';
+  }
 
   if (waiting && !state.queueBusy && !state.queue.length) {
     ui.secretaryText.textContent = '다음 발언 준비 중...';
@@ -950,7 +959,7 @@ function resetMeetingState() {
   ui.table.classList.remove('waiting');
   ui.secretaryText.textContent = '회의록 준비 중...';
   ui.turnLabel.textContent = '회의 준비 중...';
-  ui.meetingStatus.textContent = '회의 준비 중';
+  ui.meetingStatus.textContent = '회의 준비 중...';
   ui.meetingStatus.classList.remove('waiting');
   renderTimer();
 }

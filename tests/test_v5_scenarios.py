@@ -49,6 +49,21 @@ class CompletionScenarios(unittest.TestCase):
         self.assertEqual(result["state"], "decided")
         self.assertIn("상대적 배분", prompt)
 
+    def test_direct_performance_request_is_not_turned_into_process_planning(self):
+        answer = json.dumps({
+            "relations": {},
+            "reading": "참석자들이 실제로 자기소개한다",
+            "uncertainty": "없음",
+            "completion": "참석자들의 실제 자기소개",
+        }, ensure_ascii=False)
+        with patch.object(engine, "ask", return_value=answer) as ask:
+            context = meeting.interpret_context("자기소개 하기", ["CEO", "디자이너"])
+        prompt = ask.call_args.args[0]
+        self.assertEqual(context["completion"], "참석자들의 실제 자기소개")
+        self.assertIn("실제 내용을 말하는 것이 요청", prompt)
+        contextual = meeting.contextual_topic("자기소개 하기", context)
+        self.assertIn("그 일을 실제로 한다", contextual)
+
     def test_character_prompt_keeps_optional_human_oddness(self):
         lens = {"CEO": engine.CHARACTERS["CEO"]}
         generated = json.dumps({

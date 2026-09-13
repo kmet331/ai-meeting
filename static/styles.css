@@ -390,10 +390,22 @@ textarea:focus-visible, button:focus-visible, .participant-card:has(input:focus-
   letter-spacing: .14em;
 }
 
+.table-status-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 22px;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
 .table-wait-indicator {
   display: none;
+  align-items: center;
   justify-content: center;
-  margin: 8px 0 3px;
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 .conference-table.waiting .table-wait-indicator {
@@ -401,8 +413,8 @@ textarea:focus-visible, button:focus-visible, .participant-card:has(input:focus-
 }
 
 .table-spinner {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border: 3px solid rgba(247, 242, 232, .28);
   border-top-color: #f7f2e8;
   border-radius: 50%;
@@ -1301,7 +1313,7 @@ textarea:focus-visible, button:focus-visible, .participant-card:has(input:focus-
 
 .table-center small {
   display: block;
-  margin-top: 6px;
+  margin-top: 0;
   font-size: 14px;
   color: rgba(255,255,255,.78);
 }

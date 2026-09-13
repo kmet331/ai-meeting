@@ -168,3 +168,10 @@ Controller는 conversation alive 및 meaningful new issue/question/objection/bra
 - 2026-09-13 반응형 좌석 보정: 900px 이하 캐러셀에서 발화자는 하단 34px, 주변 인물은 10px가 테이블 뒤로 들어가도록 배치한다. 확대된 발화자가 테이블 선 위에 떠 보이던 3px 기준은 폐기했다.
 - 반응 아이콘은 PC 48px, 900px 이하 42px이며 캐릭터 오른쪽 중앙에 둔다. 활성 좌석을 같은 줄의 다른 캐릭터보다 위에 그려 아이콘이 옆 캐릭터에 가려지지 않게 하고, 말풍선은 별도 상단 영역을 유지한다.
 
+## 2026-09-13 direct-task and table alignment update
+
+- A prompt that directly asks attendees to perform something in speech (for example, `자기소개 하기`) is fulfilled by performing it. Characters must not replace it with a discussion about order, format, or time unless the user asks for that method.
+- Such direct performance is not a shared decision goal; summaries must not label process rules as the requested result.
+- The table waiting indicator is one horizontal line: spinner followed by status text.
+- Before the first spoken turn the status is `회의 준비 중...`; after at least one spoken turn, while waiting for the next model response, it is `생각 중...`.
+- Character/table alignment is measured from the table top. At widths up to 900px the focused carousel character overlaps the table by 14px and peers by 10px. At 901-1560px every character uses the same 10px row drop; the active speaker gets no extra downward offset.
