@@ -7,7 +7,7 @@ CSS = (ROOT / "static" / "styles.css").read_text(encoding="utf-8")
 JS = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
 
 for element_id in (
-    "roomStage", "activeSpeechBubble", "secretaryDesk", "minutesButton",
+    "roomStage", "activeSpeechBubble", "reactionLayer", "secretaryDesk", "minutesButton",
     "endOverlay", "endMinutesButton", "endNewMeetingButton", "timer",
     "turnLabel", "minutesPanel", "finalSummary", "meetingStatus",
 ):
@@ -73,5 +73,7 @@ assert "requestAnimationFrame(timerLoop)" in JS
 print("UI CONTRACT PASS")
 
 assert "function reflowMeetingLayout()" in JS
+assert "function positionReactionMarker(role)" in JS
+assert ".reaction-layer" in CSS
 assert "ResizeObserver" in JS
 

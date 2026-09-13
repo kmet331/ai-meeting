@@ -2003,17 +2003,18 @@ textarea:focus-visible, button:focus-visible, .participant-card:has(input:focus-
 .human-avatar i { font-size: 44px; }
 .avatar.human-avatar::before, .avatar.human-avatar::after { display: none; }
 .seat.active .avatar.human-avatar:not(.avatar-asset) { background: #dfd6ee; }
-.expression-mark {
-  position: absolute;
-  right: -26px;
-  top: 42%;
-  width: 48px;
-  height: 48px;
-  transform: translateY(-50%);
-  z-index: 12;
+.expression-mark { display: none !important; }
+.reaction-layer {
+  position: fixed;
+  z-index: 21;
+  width: 96px;
+  height: 96px;
+  transform: translate(-50%, -50%);
   pointer-events: none;
+  filter: drop-shadow(0 2px 0 rgba(255,255,255,.95)) drop-shadow(0 2px 3px rgba(0,0,0,.22));
 }
-.expression-mark img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 0 rgba(255,255,255,.95)); }
+.reaction-layer.hidden { display: none; }
+.reaction-layer img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .playback-paused *, .playback-paused *::before, .playback-paused *::after { animation-play-state: paused !important; }
 @media (max-width: 900px) {
   .meeting-header h2 { white-space: normal; text-overflow: clip; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
@@ -2024,7 +2025,11 @@ textarea:focus-visible, button:focus-visible, .participant-card:has(input:focus-
   .seat .avatar { width: var(--carousel-size, 126px) !important; height: calc(var(--carousel-size, 126px) * .9) !important; margin: 0 !important; }
   .seat.mobile-peer { opacity: var(--seat-opacity, .58) !important; filter: blur(1px) saturate(.65) !important; visibility: var(--seat-visibility, visible) !important; z-index: 6 !important; }
   .seat.mobile-focus { opacity: var(--seat-opacity, 1) !important; visibility: var(--seat-visibility, visible) !important; filter: none !important; z-index: 9 !important; }
-  .expression-mark { right: -20px; top: 43%; width: 42px; height: 42px; }
+  .reaction-layer { width: 88px; height: 88px; }
+}
+
+@media (max-width: 767px) {
+  .reaction-layer { width: 80px; height: 80px; }
 }
 
 /* Compensate for the human sprite's wider transparent canvas. */

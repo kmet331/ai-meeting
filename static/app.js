@@ -41,6 +41,7 @@ const ui = {
   activeSpeechBubble: $('#activeSpeechBubble'),
   bubbleSpeaker: $('#bubbleSpeaker'),
   bubbleText: $('#bubbleText'),
+  reactionLayer: $('#reactionLayer'),
   endOverlay: $('#endOverlay'),
   endIcon: $('#endIcon'),
   endKicker: $('#endKicker'),
@@ -446,6 +447,64 @@ function positionSpeechBubble(role) {
   const tailX = narrow ? width / 2 : clamp(cx - left, 20, width - 20);
   ui.activeSpeechBubble.style.setProperty('--tail-x', `${tailX}px`);
 }
+
+function positionReactionMarker(role) {
+  if (ui.reactionLayer.classList.contains('hidden')) return;
+
+  const seat = $$('.seat').find(node => node.dataset.role === role);
+  const avatar = seat?.querySelector('.avatar');
+  const stage = ui.roomStage.getBoundingClientRect();
+  if (!avatar || !stage.width || !stage.height) return;
+
+  const sprite = avatar.getBoundingClientRect();
+  const marker = ui.reactionLayer.getBoundingClientRect();
+  const markerWidth = marker.width || 64;
+  const markerHeight = marker.height || 64;
+  const margin = matchMedia('(max-width: 767px)').matches ? 8 : 12;
+  let centerX = sprite.right + markerWidth * 0.5;
+  let centerY = sprite.top + sprite.height * 0.32;
+
+  centerX = clamp(centerX, stage.left + markerWidth / 2 + margin, stage.right - markerWidth / 2 - margin);
+  centerY = clamp(centerY, stage.top + markerHeight / 2 + margin, stage.bottom - markerHeight / 2 - margin);
+
+  const bubble = ui.activeSpeechBubble.classList.contains('hidden')
+    ? null
+    : ui.activeSpeechBubble.getBoundingClientRect();
+  const overlapsBubble = bubble
+    && centerX + markerWidth / 2 > bubble.left
+    && centerX - markerWidth / 2 < bubble.right
+    && centerY + markerHeight / 2 > bubble.top
+    && centerY - markerHeight / 2 < bubble.bottom;
+
+  if (overlapsBubble) {
+    const belowBubble = bubble.bottom + markerHeight / 2 + 10;
+    const aboveBubble = bubble.top - markerHeight / 2 - 10;
+    if (belowBubble <= stage.bottom - markerHeight / 2 - margin) {
+      centerY = belowBubble;
+    } else if (aboveBubble >= stage.top + markerHeight / 2 + margin) {
+      centerY = aboveBubble;
+    }
+  }
+
+  ui.reactionLayer.style.left = `${centerX}px`;
+  ui.reactionLayer.style.top = `${centerY}px`;
+}
+
+function showReactionMarker(role, source) {
+  ui.reactionLayer.replaceChildren();
+  if (!source) {
+    ui.reactionLayer.classList.add('hidden');
+    return;
+  }
+
+  const image = document.createElement('img');
+  image.src = source;
+  image.alt = '';
+  ui.reactionLayer.appendChild(image);
+  ui.reactionLayer.classList.remove('hidden');
+  positionReactionMarker(role);
+}
+
 function reflowMeetingLayout() {
   if (ui.meetingView.classList.contains('hidden')) return;
   positionSeats();
@@ -453,6 +512,7 @@ function reflowMeetingLayout() {
     requestAnimationFrame(() => {
       if (state.activeSpeaker && !ui.activeSpeechBubble.classList.contains('hidden')) {
         positionSpeechBubble(state.activeSpeaker);
+        positionReactionMarker(state.activeSpeaker);
       }
     });
   });
@@ -485,12 +545,14 @@ function setSpeaker(role, speech, expression = 'neutral') {
     node.dataset.expression = current ? expression : 'neutral';
     setSeatSprite(node, current ? expression : 'neutral', current);
     const mark = node.querySelector('.expression-mark');
-    if (mark) mark.innerHTML = current && reactionAsset
-      ? `<img src="${reactionAsset}" alt="">`
-      : '';
+    if (mark) mark.replaceChildren();
   });
   ui.activeSpeechBubble.classList.remove('hidden');
-  requestAnimationFrame(() => positionSpeechBubble(role));
+  showReactionMarker(role, reactionAsset);
+  requestAnimationFrame(() => {
+    positionSpeechBubble(role);
+    positionReactionMarker(role);
+  });
 }
 
 function closeActiveSpeech() {
@@ -498,6 +560,7 @@ function closeActiveSpeech() {
   ui.activeSpeechBubble.classList.add('hidden');
   ui.bubbleSpeaker.textContent = '';
   ui.bubbleText.textContent = '';
+  showReactionMarker('', '');
   $$('.seat').forEach(node => node.classList.remove('active', 'skip'));
   $$('.seat').forEach(node => setSeatSprite(node));
   $$('.floating-role-badge').forEach(node => node.classList.remove('active', 'skip'));
@@ -1244,7 +1307,8 @@ function initPreviewMeeting() {
 
   setSpeaker(
     '마케팅팀장',
-    '일단 눈에 띄어야 하니까 조금 과감하게 가는 게 좋을 것 같습니다.'
+    '일단 눈에 띄어야 하니까 조금 과감하게 가는 게 좋을 것 같습니다.',
+    'pleased'
   );
 
   addMinute('speech', 'CEO', '좋아요. 오늘은 광고 콘셉트 방향부터 정하죠.');
@@ -1254,6 +1318,7 @@ function initPreviewMeeting() {
   requestAnimationFrame(() => {
     reflowMeetingLayout();
     positionSpeechBubble('마케팅팀장');
+    positionReactionMarker('마케팅팀장');
   });
 }
 
