@@ -75,6 +75,18 @@ class CompletionScenarios(unittest.TestCase):
         self.assertIn("사용자가 실제로 받고 싶은 반응", contextual)
         self.assertIn("비유를 만드는 방법이나 발표 순서를 정하는 것", contextual)
 
+    def test_explicit_each_request_keeps_only_requested_responses_alive(self):
+        topic = """제품을 날씨에 비유해 봐
+명시적으로 실제 응답이 필요한 참석자: CEO, 디자이너"""
+        lenses = {
+            "CEO": {"mood": "", "lens": "", "want": "", "friction": "", "personal_detail": "", "private_texture": "", "private_spark": "", "quirk": "", "impulse": "", "interest": 0, "strength": 0, "expressed": True},
+            "디자이너": {"mood": "", "lens": "", "want": "", "friction": "", "personal_detail": "", "private_texture": "", "private_spark": "", "quirk": "", "impulse": "", "interest": 0, "strength": 0, "expressed": False},
+        }
+        history = [{"speaker": "CEO", "text": "우리 제품은 맑고 바람 센 날 같아요."}]
+        verdict = engine.controller(topic, "3", history, lenses)
+        self.assertTrue(verdict["continue"])
+        self.assertEqual(verdict["unexpressed"], ["디자이너"])
+
     def test_character_prompt_keeps_optional_human_oddness(self):
         lens = {"CEO": engine.CHARACTERS["CEO"]}
         generated = json.dumps({

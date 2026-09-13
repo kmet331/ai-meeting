@@ -50,6 +50,7 @@ reading에는 사용자가 지금 누구에게 무엇을 듣고 싶어 하는지
 requested_response에는 참석자들의 실제 발언에 무엇이 들어가야 하는지 구체적인 자유문장으로 적는다.
 shared_result에는 사용자가 여러 의견 뒤에 하나의 공동 결과까지 명시적으로 요구한 경우에만 그 결과를 적고, 아니면 빈 문자열로 둔다.
 participation_scope에는 누구의 답을 명시적으로 요구했는지 적는다. 문장에 없는 전원 참여를 추측하지 않는다.
+required_speakers에는 사용자가 각자/모두처럼 개별 실제 응답을 분명히 요구한 현재 참석자만 배열로 적는다. 그렇지 않으면 빈 배열이다.
 nearby_mistake에는 원 요청과 비슷해 보이지만 대신 해서는 안 되는 다른 과업을 적는다. 고정 유형 이름을 붙이지 말고 이 문장 안에서만 구체적으로 구분한다.
 둘 이상의 기대가 함께 있으면 하나를 버리지 말고 requested_response와 shared_result에 함께 보존한다.
 둘 다 가능하면 하나를 추측해 확정하지 말고 uncertainty에 무엇이 모호한지 그대로 남긴다.
@@ -66,6 +67,7 @@ JSON 형식:
   "requested_response": "참석자 발언에 실제로 들어가야 할 내용이나 행동",
   "shared_result": "명시적으로 요구된 공동 결과. 없으면 빈 문자열",
   "participation_scope": "명시적으로 답을 요구받은 사람 범위",
+  "required_speakers": ["개별 실제 응답이 명시적으로 요구된 참석자만"],
   "nearby_mistake": "비슷해 보이지만 대신 하면 안 되는 과업",
   "uncertainty": "아직 모호한 점. 없으면 없음",
   "completion": "어떤 실제 내용이 나오면 원 요청에 답한 것인지"
@@ -83,6 +85,10 @@ JSON 형식:
         "requested_response": str(data.get("requested_response", data.get("completion", "사용자 말에 직접 답함"))).strip(),
         "shared_result": str(data.get("shared_result", "")).strip(),
         "participation_scope": str(data.get("participation_scope", "명시된 대상만")).strip(),
+        "required_speakers": [
+            role for role in data.get("required_speakers", [])
+            if isinstance(role, str) and role in participants
+        ] if isinstance(data.get("required_speakers", []), list) else [],
         "nearby_mistake": str(data.get("nearby_mistake", "원 요청 대신 진행 절차만 논의하는 것")).strip(),
         "uncertainty": str(data.get("uncertainty", "없음")).strip() or "없음",
         "completion": str(data.get("completion", "사용자 말에 직접 답함")).strip(),
@@ -103,12 +109,14 @@ def contextual_topic(topic: str, context: dict) -> str:
         requested_response = str(context.get("requested_response", completion))
         shared_result = str(context.get("shared_result", ""))
         participation_scope = str(context.get("participation_scope", "명시된 대상만"))
+        required_speakers = [role for role in context.get("required_speakers", []) if role in engine.CHARACTERS]
         nearby_mistake = str(context.get("nearby_mistake", "원 요청 대신 진행 절차만 논의하는 것"))
     else:
         relations = context
         reading, uncertainty, completion = topic, "없음", "사용자 말에 직접 답함"
         requested_response, shared_result = completion, ""
         participation_scope, nearby_mistake = "명시된 대상만", "원 요청 대신 진행 절차만 논의하는 것"
+        required_speakers = []
     relation_text = "\n".join(f"- {role}: {desc}" for role, desc in relations.items()) or "- 별도 당사자 관계 없음"
     attendees = ", ".join(engine.CHARACTERS.keys())
     return f"""{topic}
@@ -125,6 +133,7 @@ def contextual_topic(topic: str, context: dict) -> str:
 사용자가 실제로 받고 싶은 반응: {requested_response}
 명시적으로 필요한 공동 결과: {shared_result or '없음'}
 누구의 답을 요구했는지: {participation_scope}
+명시적으로 실제 응답이 필요한 참석자: {', '.join(required_speakers) or '없음'}
 대신 하면 안 되는 가까운 다른 과업: {nearby_mistake}
 답이 되려면: {completion}
 

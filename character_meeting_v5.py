@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import random
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -284,6 +285,20 @@ def controller(topic, mode_key, history, lenses):
         LAST_ALIVE_OPENING = ""
         return {"continue": True, "reason": "대화 시작", "unexpressed": []}
 
+    required_match = re.search(r"명시적으로 실제 응답이 필요한 참석자:\s*([^\n]+)", topic)
+    required_names = []
+    if required_match and required_match.group(1).strip() != "없음":
+        required_names = [name.strip() for name in required_match.group(1).split(",") if name.strip() in CHARACTERS]
+    already_answered = {item["speaker"] for item in history if item.get("text", "").strip()}
+    pending_required = [name for name in required_names if name not in already_answered]
+    if pending_required:
+        LAST_ALIVE_OPENING = f"사용자가 명시적으로 요청한 실제 응답이 아직 남은 사람: {', '.join(pending_required)}"
+        return {
+            "continue": True,
+            "reason": "사용자가 명시적으로 요청한 개별 응답이 아직 남음",
+            "unexpressed": pending_required,
+        }
+
     lens_view = "\n".join(
         f"- {n}: mood={s.get('mood', '')} | lens={s.get('lens', '')} | "
         f"want={s.get('want', '')} | friction={s.get('friction', '')} | "
@@ -349,6 +364,9 @@ JSON만 출력:
 def select_speaker(topic, mode_key, history, lenses, preferred=None):
     previous = history[-1]["speaker"] if history else None
     candidates = [n for n in CHARACTERS if n != previous]
+    requested_candidates = [name for name in (preferred or []) if name in candidates]
+    if requested_candidates:
+        candidates = requested_candidates
 
     last_spoken = {
         name: next(
