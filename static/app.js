@@ -48,6 +48,7 @@ const ui = {
   endTimeSaved: $('#endTimeSaved'),
   endDecision: $('#endDecision'),
   meetingStatus: $('#meetingStatus'),
+  newMeetingConfirm: $('#newMeetingConfirm'),
 };
 
 const state = {
@@ -1087,6 +1088,7 @@ function cancelActiveMeeting() {
 }
 
 function resetMeeting() {
+  ui.newMeetingConfirm.classList.add('hidden');
   cancelActiveMeeting();
   state.eventSource?.close();
   state.eventSource = null;
@@ -1097,6 +1099,20 @@ function resetMeeting() {
   ui.setupView.classList.remove('hidden');
   ui.startButton.textContent = '회의 시작';
   refreshStartState();
+}
+
+function requestNewMeeting() {
+  const inProgress = !ui.meetingView.classList.contains('hidden') && !state.ended && Boolean(state.meetingId);
+  if (!inProgress) {
+    resetMeeting();
+    return;
+  }
+  ui.newMeetingConfirm.classList.remove('hidden');
+  $('#keepCurrentMeeting').focus();
+}
+
+function keepCurrentMeeting() {
+  ui.newMeetingConfirm.classList.add('hidden');
 }
 
 /* ---------- Minutes panel ---------- */
@@ -1194,8 +1210,10 @@ $('#endMinutesButton').addEventListener('click', openMinutes);
 $('#closeMinutes').addEventListener('click', closeMinutes);
 ui.minutesBackdrop.addEventListener('click', closeMinutes);
 $('#copyMinutes').addEventListener('click', copyMinutes);
-$('#newMeetingButton').addEventListener('click', resetMeeting);
+$('#newMeetingButton').addEventListener('click', requestNewMeeting);
 $('#endNewMeetingButton').addEventListener('click', resetMeeting);
+$('#confirmNewMeeting').addEventListener('click', resetMeeting);
+$('#keepCurrentMeeting').addEventListener('click', keepCurrentMeeting);
 
 refreshStartState();
 

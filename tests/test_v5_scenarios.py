@@ -70,6 +70,7 @@ class CompletionScenarios(unittest.TestCase):
         engine_source = (ROOT / "character_meeting_v5.py").read_text(encoding="utf-8")
         self.assertNotIn("자기소개 하기", engine_source)
         self.assertGreaterEqual(engine_source.count("사용자가 실제로 받고 싶은 반응"), 3)
+        self.assertIn("의견을 나열한 뒤 곧바로 끝내지 않는다", engine_source)
         contextual = meeting.contextual_topic(topic, context)
         self.assertIn("사용자가 실제로 받고 싶은 반응", contextual)
         self.assertIn("비유를 만드는 방법이나 발표 순서를 정하는 것", contextual)

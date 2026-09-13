@@ -123,6 +123,16 @@
             </div>
           </div>
         </div>
+        <div id="newMeetingConfirm" class="meeting-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="newMeetingConfirmTitle">
+          <div class="meeting-confirm-card">
+            <h3 id="newMeetingConfirmTitle">현재 진행중인 회의가 있습니다.</h3>
+            <p>그래도 새 회의를 시작하시겠습니까?</p>
+            <div class="meeting-confirm-actions">
+              <button type="button" id="confirmNewMeeting" class="primary-small-button">네 (새 회의 시작)</button>
+              <button type="button" id="keepCurrentMeeting" class="secondary-button">아니오 (현재 회의 유지)</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <form id="humanComposer" class="human-composer hidden">
